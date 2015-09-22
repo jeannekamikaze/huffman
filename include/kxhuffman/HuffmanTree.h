@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HuffmanNode.h"
+#include "Bitseq.h"
 
 #include <map>
 #include <queue>
@@ -8,9 +9,6 @@
 
 namespace kxh
 {
-
-/// A bit sequence.
-using Bitseq = std::vector<bool>;
 
 /// Maps values to their binary representation.
 template <typename T>

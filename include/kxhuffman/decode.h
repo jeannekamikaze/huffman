@@ -209,7 +209,7 @@ void decode (const BinaryBlob& blob, cont_t& cont)
 {
     Table<T> table;
     Bitseq code;
-    const U8* ptr = (const U8*) &blob[0];
+    const U8* ptr = (const U8*) blob.c_str();
     deserialise(ptr, table, code);
     decode_seq(code.begin(), code.end(), table, cont);
 }

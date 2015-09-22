@@ -33,4 +33,5 @@ HEADERS += \
     ../include/kxhuffman/decode.h \
     ../include/kxhuffman/HuffmanTree.h \
     ../include/kxhuffman/HuffmanNode.h \
+    ../include/kxhuffman/Bitseq.h \
     ../include/kxhuffman/common.h
