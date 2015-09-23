@@ -3,7 +3,7 @@
 #include "HuffmanNode.h"
 #include "Bitseq.h"
 
-#include <map>
+#include <unordered_map>
 #include <queue>
 #include <vector>
 
@@ -12,11 +12,11 @@ namespace kxh
 
 /// Maps values to their binary representation.
 template <typename T>
-using Table = std::map<T,Bitseq>;
+using Table = std::unordered_map<T,Bitseq>;
 
 /// Maps values to their frequency in the input data.
 template <typename T>
-using FrequencyMap = std::map<T,int>;
+using FrequencyMap = std::unordered_map<T,int>;
 
 template <class T>
 class HuffmanTree
