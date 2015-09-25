@@ -59,11 +59,15 @@ enum num_type
 };
 
 #ifdef ALGORITHM_OUTPUT
-#include <cassert>
 #include <cstdio>
-#define DEBUG_ASSERT assert
 #define DEBUG_PRINT printf
 #else
-#define DEBUG_ASSERT(x)
 #define DEBUG_PRINT(...)
+#endif
+
+#ifdef KX_DEBUG
+#include <cassert>
+#define DEBUG_ASSERT assert
+#else
+#define DEBUG_ASSERT(x)
 #endif

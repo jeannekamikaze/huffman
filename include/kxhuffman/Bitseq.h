@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common.h"
+
 #include <vector>
 #include <cstdint>
 #include <limits>
@@ -15,6 +17,7 @@ class Bitseq
 {
 public:
 
+    // iterate over the bits of the bit sequence
     class const_iterator
     {
     public:
@@ -45,53 +48,96 @@ public:
 
 public:
 
-    Bitseq& operator= (const Bitseq& that)
+    Bitseq ()
+        : count(0)
     {
-        bits  = that.bits;
+        blocks.push_back(0);
+    }
+
+    Bitseq& operator= (const Bitseq& that) {
+        blocks = that.blocks;
         count = that.count;
         return *this;
     }
 
+    /// Push a bit sequence.
+    void push_back (const Bitseq& seq) {
+        if (seq.count == 0) return; // empty bitseq, nothing to copy
+        if (count == 0) // uninitialised bitseq, just copy
+        {
+            *this = seq;
+            return;
+        }
+        bool last_fits = count + seq.count <= bpp;
+        bool fits = (seq.blocks.size() == 1) && last_fits;
+        if (fits) // block in seq fits current block
+        {
+            blocks.back() |= (seq.blocks.back() >> count);
+            count += seq.count;
+            DEBUG_ASSERT(count > 0 && count <= bpp);
+        }
+        else // blocks in seq must be split
+        {
+            std::size_t fit = bpp-count;
+            DEBUG_ASSERT(fit < bpp); // since count > 0
+            for (std::size_t i = 0; i < seq.blocks.size(); ++i) {
+                Block block = seq.blocks[i];
+                if (fit > 0)
+                    blocks.back() |= (block >> count);
+                if (i != seq.blocks.size()-1 || !last_fits)
+                    blocks.push_back(block << fit);
+            }
+            if (last_fits)
+                count += seq.count;
+            else
+                count = (seq.count - fit);
+            DEBUG_ASSERT(count > 0 && count <= bpp);
+        }
+    }
+
     /// Push a bit.
     void push_back (bool x) {
-        if (bits.size() == 0 || count == bpp) // ran out of bits for current block
+        if (count == bpp) // ran out of bits for current block
         {
-            bits.push_back(0);
-            count = 0;
+            blocks.push_back(x ? leftmost : 0);
+            count = 1;
         }
-        bits.back() |= (x ? (leftmost >> count) : 0);
-        count++;
+        else
+        {
+            blocks.back() |= (x ? (leftmost >> count) : 0);
+            count++;
+        }
+        DEBUG_ASSERT(count > 0 && count <= bpp);
     }
 
     /// Pop the last inserted bit.
     void pop_back () {
-        if (bits.empty()) return;
-        if (count == 1)
+        // if count = 0, then the bitseq is empty, in which case
+        // pop_back() is undefined
+        DEBUG_ASSERT(count > 0);
+        count--;
+        if (count == 0) // block no longer has relevant bits
         {
-            bits.pop_back();
-            count = sizeof(Block); // the block before the current one was full
+            blocks.pop_back();
+            count = bpp;
         }
-        else
-        {
-            count--;
-            bits.back() = bits.back() & ~(leftmost >> count); // set it to 0
-        }
+        else blocks.back() = blocks.back() & ~(leftmost >> count); // set it to 0
+        DEBUG_ASSERT(count > 0 && count <= bpp);
     }
 
     /// Return the ith bit.
     bool operator[] (std::size_t index) const {
-        return ( bits[index/bpp] & (leftmost >> (index % bpp)) ) != 0;
+        return ( blocks[index/bpp] & (leftmost >> (index % bpp)) ) != 0;
     }
 
     /// Return the number of bits in the sequence.
     std::size_t size () const {
-        if (bits.empty()) return 0;
-        else return (bits.size()-1)*bpp + count;
+        return (blocks.size()-1)*bpp + count;
     }
 
     /// Reserve space for the given number of bits.
     void reserve (std::size_t size) {
-        bits.reserve(size/bpp + 1); // just add 1, it's easier...
+        blocks.reserve(size/bpp + 1); // just add 1, it's easier...
     }
 
     /// Return an iterator to the beginning of the sequence.
@@ -106,8 +152,14 @@ public:
 
 private:
 
-    std::vector<Block> bits;
-    std::size_t count = 0; // the number of relevant bits in the current block
+    // the blocks in the bitseq.
+    // there is always at least 1 block, even in an empty bitseq.
+    std::vector<Block> blocks;
+
+    // the number of relevant bits in the current block, in [0,bpp].
+    // if count = 0, the bitseq is empty.
+    // non-empty bitseqs have count in [1,bpp].
+    std::size_t count;
 };
 
 } // namespace kxh

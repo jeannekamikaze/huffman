@@ -4,3 +4,4 @@ Makefile*
 demo/build
 demo/debug
 demo/release
+test/debug

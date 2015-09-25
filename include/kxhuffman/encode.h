@@ -58,19 +58,18 @@ Bitseq encode_seq (iter_t begin, const iter_t& end, const Table<T>& table)
 {
     DEBUG_PRINT("Code sequence encoding:\n");
     Bitseq seq;
-    seq.reserve(end-begin);
     for (; begin != end; ++begin)
     {
         auto it = table.find(*begin);
         DEBUG_ASSERT(it != table.end());
+        seq.push_back(it->second);
+#ifdef ALGORITHM_OUTPUT
         const Bitseq& c = it->second;
         DEBUG_PRINT("%c -> ", *begin); // assuming char sequence
         for (size_t i = 0; i < c.size(); ++i)
-        {
-            seq.push_back(c[i]);
             DEBUG_PRINT("%d", c[i]);
-        }
         DEBUG_PRINT("\n");
+#endif
     }
     return seq;
 }
