@@ -116,7 +116,7 @@ BinaryBlob serialise_bitseq (const Bitseq& bitseq, bool write_num = true)
     U8 mask = 0x80;
     for (size_t i = 0; i < n; ++i)
     {
-        if (bitseq[i]) ptr[i/8] |= mask;
+        ptr[i >> 3] |= (mask * (U8) bitseq[i]);
         mask = rotate_right(mask);
     }
 
