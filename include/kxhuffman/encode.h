@@ -53,26 +53,48 @@ BinaryBlob serialise_num (std::size_t val)
 }
 
 /// Encode the sequence using the given Huffman table.
-template <class T, class iter_t>
-Bitseq encode_seq (iter_t begin, const iter_t& end, const Table<T>& table)
+/// Using a class because we cannot specialise the N using a template function.
+template <class T, class iter_t, int N = sizeof(T)>
+struct encode_seq
 {
-    DEBUG_PRINT("Code sequence encoding:\n");
-    Bitseq seq;
-    for (; begin != end; ++begin)
+    static Bitseq encode (iter_t begin, const iter_t& end, const Table<T>& table)
     {
-        auto it = table.find(*begin);
-        DEBUG_ASSERT(it != table.end());
-        seq.push_back(it->second);
-#ifdef ALGORITHM_OUTPUT
-        const Bitseq& c = it->second;
-        DEBUG_PRINT("%c -> ", *begin); // assuming char sequence
-        for (size_t i = 0; i < c.size(); ++i)
-            DEBUG_PRINT("%d", c[i]);
-        DEBUG_PRINT("\n");
-#endif
+        DEBUG_PRINT("Code sequence encoding:\n");
+        Bitseq seq;
+        for (; begin != end; ++begin)
+        {
+            auto it = table.find(*begin);
+            DEBUG_ASSERT(it != table.end());
+            seq.push_back(it->second);
+    #ifdef ALGORITHM_OUTPUT
+            const Bitseq& c = it->second;
+            DEBUG_PRINT("%c -> ", *begin); // assuming char sequence
+            for (size_t i = 0; i < c.size(); ++i)
+                DEBUG_PRINT("%d", c[i]);
+            DEBUG_PRINT("\n");
+    #endif
+        }
+        return seq;
     }
-    return seq;
-}
+};
+
+// specialise for T s.t. sizeof(T) = 1
+template <class T, class iter_t>
+struct encode_seq<T, iter_t, 1>
+{
+    static Bitseq encode (iter_t begin, const iter_t& end, const Table<T>& table)
+    {
+        // transform table to vector for faster lookups
+        std::vector<Bitseq> value_seq(256);
+        for (const auto& keyval : table)
+            value_seq[keyval.first] = keyval.second;
+        // encode
+        Bitseq seq;
+        for (; begin != end; ++begin)
+            seq.push_back(value_seq[*begin]);
+        return seq;
+    }
+};
 
 /// Rotate the byte 1 bit to the right.
 inline U8 rotate_right (U8 c)
@@ -237,7 +259,7 @@ BinaryBlob encode (iter_t begin, const iter_t& end)
 {
     HuffmanTree<T> t(begin, end);
     Table<T> table = t.make_table();
-    Bitseq code = encode_seq(begin, end, table);
+    Bitseq code = encode_seq<T,iter_t>::encode(begin, end, table);
     return serialise<T>(table, code);
 }
 
