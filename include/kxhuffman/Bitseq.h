@@ -80,7 +80,8 @@ public:
         {
             std::size_t fit = bpp-count;
             DEBUG_ASSERT(fit < bpp); // since count > 0
-            for (std::size_t i = 0; i < seq.blocks.size(); ++i) {
+            for (std::size_t i = 0; i < seq.blocks.size(); ++i)
+            {
                 Block block = seq.blocks[i];
                 if (fit > 0)
                     blocks.back() |= (block >> count);
@@ -91,6 +92,35 @@ public:
                 count += seq.count;
             else
                 count = (seq.count - fit);
+            DEBUG_ASSERT(count > 0 && count <= bpp);
+        }
+    }
+
+    /// Push a byte.
+    void push_byte (std::uint8_t byte, std::size_t num_bits = 8) {
+        // byte must be placed in upper byte of block
+        Block block = ((Block) byte) << (bpp-8);
+        if (count + num_bits <= bpp) // fits in current block
+        {
+            blocks.back() |= (block >> count);
+            count += num_bits;
+            DEBUG_ASSERT(count > 0 && count <= bpp);
+        }
+        else
+        {
+            DEBUG_ASSERT(count > 0); // otherwise all bits fit
+            std::size_t fit = bpp-count;
+            if (fit == 0)
+            {
+                blocks.push_back(block);
+                count = num_bits;
+            }
+            else
+            {
+                blocks.back() |= (block >> count);
+                blocks.push_back(block << fit);
+                count = num_bits - fit;
+            }
             DEBUG_ASSERT(count > 0 && count <= bpp);
         }
     }

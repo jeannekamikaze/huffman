@@ -85,13 +85,14 @@ std::size_t deserialise_bitseq (const U8*& ptr,
     }
     else M = size;
 
-    std::size_t count = M;
-    while (count > 0)
-    {
-        std::size_t n = count > 8 ? 8 : count; // number of bits to deserialise
-        deserialise_byte(*ptr++, n, seq);
-        count -= n;
-    }
+    std::size_t whole_bytes = M/8;
+    std::size_t partial_byte_bits = M%8;
+
+    for (std::size_t i = 0; i < whole_bytes; ++i)
+        seq.push_byte(*ptr++);
+
+    if (partial_byte_bits > 0)
+        seq.push_byte(*ptr++, partial_byte_bits);
 
     return M;
 }
