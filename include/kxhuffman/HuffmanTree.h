@@ -18,6 +18,10 @@ using Table = std::unordered_map<T,Bitseq>;
 template <typename T>
 using FrequencyMap = std::unordered_map<T,int>;
 
+/// Construct a Huffman tree from a sequence.
+template <class T, class iter_t>
+node<T>* from_sequence (iter_t begin, const iter_t& end);
+
 template <class T>
 class HuffmanTree
 {
