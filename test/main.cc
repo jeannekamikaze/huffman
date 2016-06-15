@@ -9,7 +9,7 @@ void equal (const Bitseq& bitseq, const std::vector<int>& values)
 {
     BOOST_REQUIRE_EQUAL(bitseq.size(), values.size());
     for (std::size_t i = 0; i < values.size(); ++i)
-        BOOST_REQUIRE_EQUAL((int) bitseq[i], values[i++]);
+        BOOST_REQUIRE_EQUAL((int) bitseq[i], values[i]);
 }
 
 void equal (const Bitseq& a, const Bitseq& b)
@@ -55,7 +55,7 @@ Bitseq create (std::size_t N, int start_val = 1)
     Bitseq a;
     for (int i = 0; i < N; ++i)
     {
-        a.push_back(val != 0);
+        a.push_bit(val);
         val = 1 - val;
     }
     return a;
@@ -65,7 +65,7 @@ Bitseq from_block (Block b, std::size_t N)
 {
     Bitseq seq;
     for (std::size_t i = 0; i < N; ++i)
-        seq.push_back((b & (leftmost >> i)) != 0);
+        seq.push_bit(b & (leftmost >> i));
     return seq;
 }
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(bitseq_empty_push_bits_fits)
     Bitseq bitseq;
     std::vector<int> values = {0, 0, 1, 0, 1, 1, 1, 0};
     for (int x : values)
-        bitseq.push_back(x != 0);
+        bitseq.push_bit(x);
     equal(bitseq, values);
 }
 
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(bitseq_empty_push_bits_not_fits)
 
     Bitseq bitseq;
     for (int x : values)
-        bitseq.push_back(x != 0);
+        bitseq.push_bit(x);
 
     equal(bitseq, values);
 }
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(bitseq_empty_push_bitseq_fits)
     Bitseq a = create(N);
 
     Bitseq b;
-    b.push_back(a);
+    b.push_seq(a);
 
     equal(a, b);
     BOOST_REQUIRE_EQUAL(a.size(), N);
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(bitseq_empty_push_bitseq_no_fit)
     Bitseq a = create(N);
 
     Bitseq b;
-    b.push_back(a);
+    b.push_seq(a);
 
     equal(a, b);
     BOOST_REQUIRE_EQUAL(a.size(), N);
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(bitseq_non_empty_push_bitseq_no_fit)
     Bitseq b = create(M, !a[a.size()-1]);
 
     Bitseq c = a;
-    c.push_back(b);
+    c.push_seq(b);
 
     Bitseq d = create(N+M);
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(bitseq_full_push_bitseq_no_fit)
     Bitseq b = create(M, !a[a.size()-1]);
 
     Bitseq c = a;
-    c.push_back(b);
+    c.push_seq(b);
 
     Bitseq d = create(N+M);
 
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(bitseq_push_bitseq_partial_fit)
     Bitseq b = create(M, !a[a.size()-1]);
 
     Bitseq c = a;
-    c.push_back(b);
+    c.push_seq(b);
 
     Bitseq d = create(N+M);
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(bitseq_full_push_bitseq_partial_fit)
     Bitseq b = create(M, !a[a.size()-1]);
 
     Bitseq c = a;
-    c.push_back(b);
+    c.push_seq(b);
 
     Bitseq d = create(N+M);
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(bitseq_full_push_bitseq_full)
     Bitseq b = create(M, !a[a.size()-1]);
 
     Bitseq c = a;
-    c.push_back(b);
+    c.push_seq(b);
 
     Bitseq d = create(N+M);
 
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(bitseq_full_push_single_block)
     Bitseq b = from_block(0xD400000000000000, 6);
 
     Bitseq c = a;
-    c.push_back(b);
+    c.push_seq(b);
 
     contains(c, a, 0);
     contains(c, b, 64);
@@ -240,14 +240,14 @@ BOOST_AUTO_TEST_CASE(bitseq_push_pop)
     Bitseq a = create(N);
     Bitseq b = a;
 
-    b.push_back(1);
+    b.push_bit(1);
     BOOST_REQUIRE_EQUAL(b.size(), N+1);
-    b.pop_back();
+    b.pop();
     equal(a, b);
 
-    b.push_back(0);
+    b.push_bit(0);
     BOOST_REQUIRE_EQUAL(b.size(), N+1);
-    b.pop_back();
+    b.pop();
     equal(a, b);
 }
 
@@ -257,18 +257,18 @@ BOOST_AUTO_TEST_CASE(bitseq_full_push_pop)
         Bitseq a = create(bpp);
         Bitseq b = a;
         BOOST_REQUIRE_EQUAL(b.size(), bpp);
-        b.push_back(0);
+        b.push_bit(0);
         BOOST_REQUIRE_EQUAL(b.size(), bpp+1);
-        b.pop_back();
+        b.pop();
         equal(a, b);
     }
     {
         Bitseq a = create(3*bpp);
         Bitseq b = a;
         BOOST_REQUIRE_EQUAL(b.size(), 3*bpp);
-        b.push_back(1);
+        b.push_bit(1);
         BOOST_REQUIRE_EQUAL(b.size(), 3*bpp+1);
-        b.pop_back();
+        b.pop();
         equal(a, b);
     }
 }

@@ -60,8 +60,52 @@ public:
         return *this;
     }
 
+    /// Push a bit.
+    void push_bit (bool x) {
+        if (count == bpp) // ran out of bits for current block
+        {
+            blocks.push_back(x ? leftmost : 0);
+            count = 1;
+        }
+        else
+        {
+            blocks.back() |= (x ? (leftmost >> count) : 0);
+            count++;
+        }
+        DEBUG_ASSERT(count > 0 && count <= bpp);
+    }
+
+    /// Push a byte.
+    void push_byte (std::uint8_t byte, std::size_t num_bits = 8) {
+        // byte must be placed in upper byte of block
+        Block block = ((Block) byte) << (bpp-8);
+        if (count + num_bits <= bpp) // fits in current block
+        {
+            blocks.back() |= (block >> count);
+            count += num_bits;
+            DEBUG_ASSERT(count > 0 && count <= bpp);
+        }
+        else
+        {
+            DEBUG_ASSERT(count > 0); // otherwise all bits fit
+            std::size_t fit = bpp-count;
+            if (fit == 0)
+            {
+                blocks.push_back(block);
+                count = num_bits;
+            }
+            else
+            {
+                blocks.back() |= (block >> count);
+                blocks.push_back(block << fit);
+                count = num_bits - fit;
+            }
+            DEBUG_ASSERT(count > 0 && count <= bpp);
+        }
+    }
+
     /// Push a bit sequence.
-    void push_back (const Bitseq& seq) {
+    void push_seq (const Bitseq& seq) {
         if (seq.count == 0) return; // empty bitseq, nothing to copy
         if (count == 0) // uninitialised bitseq, just copy
         {
@@ -96,52 +140,8 @@ public:
         }
     }
 
-    /// Push a byte.
-    void push_byte (std::uint8_t byte, std::size_t num_bits = 8) {
-        // byte must be placed in upper byte of block
-        Block block = ((Block) byte) << (bpp-8);
-        if (count + num_bits <= bpp) // fits in current block
-        {
-            blocks.back() |= (block >> count);
-            count += num_bits;
-            DEBUG_ASSERT(count > 0 && count <= bpp);
-        }
-        else
-        {
-            DEBUG_ASSERT(count > 0); // otherwise all bits fit
-            std::size_t fit = bpp-count;
-            if (fit == 0)
-            {
-                blocks.push_back(block);
-                count = num_bits;
-            }
-            else
-            {
-                blocks.back() |= (block >> count);
-                blocks.push_back(block << fit);
-                count = num_bits - fit;
-            }
-            DEBUG_ASSERT(count > 0 && count <= bpp);
-        }
-    }
-
-    /// Push a bit.
-    void push_back (bool x) {
-        if (count == bpp) // ran out of bits for current block
-        {
-            blocks.push_back(x ? leftmost : 0);
-            count = 1;
-        }
-        else
-        {
-            blocks.back() |= (x ? (leftmost >> count) : 0);
-            count++;
-        }
-        DEBUG_ASSERT(count > 0 && count <= bpp);
-    }
-
     /// Pop the last inserted bit.
-    void pop_back () {
+    void pop () {
         // if count = 0, then the bitseq is empty, in which case
         // pop_back() is undefined
         DEBUG_ASSERT(count > 0);

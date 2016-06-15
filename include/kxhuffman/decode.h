@@ -62,7 +62,7 @@ void deserialise_byte (U8 c, std::size_t n, cont_t& seq)
     for (std::size_t i = 0; i < n; ++i)
     {
         bool b = (c & mask) != 0;
-        seq.push_back(b);
+        seq.push_bit(b);
         mask = mask >> 1;
     }
 }
@@ -110,7 +110,7 @@ Table<T> make_table (const std::vector<T>& alphabet,
         // lengths[i] = length of this bitseq
         Bitseq bits;
         for (U8 j = 0; j < lengths[i]; ++j)
-            bits.push_back(alphabits[o+j]);
+            bits.push_bit(alphabits[o+j]);
         table[alphabet[i]] = bits;
         o += lengths[i];
     }

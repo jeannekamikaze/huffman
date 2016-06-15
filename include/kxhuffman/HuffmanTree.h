@@ -138,15 +138,15 @@ void build_table (Table<T>& table, Bitseq& code, const node<T>* n)
     {
         if (n->left())
         {
-            code.push_back(0); // left turn
+            code.push_bit(0); // left turn
             build_table(table, code, n->left());
-            code.pop_back(); // remove the 0 we just pushed
+            code.pop(); // remove the 0 we just pushed
         }
         if (n->right())
         {
-            code.push_back(1); // right turn
+            code.push_bit(1); // right turn
             build_table(table, code, n->right());
-            code.pop_back(); // remove the 1 we just pushed
+            code.pop(); // remove the 1 we just pushed
         }
     }
 }

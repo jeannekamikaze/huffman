@@ -66,7 +66,7 @@ struct encode_seq
         {
             auto it = table.find(*begin);
             DEBUG_ASSERT(it != table.end());
-            seq.push_back(it->second);
+            seq.push_seq(it->second);
     #ifdef ALGORITHM_OUTPUT
             const Bitseq& c = it->second;
             DEBUG_PRINT("%c -> ", *begin); // assuming char sequence
@@ -92,7 +92,7 @@ struct encode_seq<T, iter_t, 1>
         // encode
         Bitseq seq;
         for (; begin != end; ++begin)
-            seq.push_back(value_seq[*begin]);
+            seq.push_seq(value_seq[*begin]);
         return seq;
     }
 };
@@ -159,7 +159,7 @@ void make_arrays (const Table<T>& table,
         alphabet.push_back(keyval.first);
         lengths.push_back((U8)num_bits);
         for (std::size_t i = 0; i < num_bits; ++i)
-            alphabits.push_back(keyval.second[i]);
+            alphabits.push_bit(keyval.second[i]);
     }
 #ifdef ALGORITHM_OUTPUT
     printf("Alphabet encoding:\n");
